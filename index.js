@@ -29,25 +29,57 @@ async function writeLastProcessedId(id) {
 // Fetches JSON data from the specified URL
 async function fetchData(url) {
     const response = await axios.get(url);
+    const date = new Date(response.data.header.timestamp * 1000);
+    console.log('Timestamp:', date.toString());
+    
+    console.log('Number of entities:', response.data.entity.length);
     return response.data;
 }
 
 // Processes new delay alerts
 function processNewAlerts(data, lastProcessedId) {
+    if (!data.entity || !Array.isArray(data.entity)) {
+        console.error('Unexpected data structure: entity array not found');
+        return [];
+    }
+
+    // console.log('Number of entities:', data.entity.length);
+
     return data.entity
-        .filter(entity => 'alert' in entity && 
-                          entity.alert.alert_type === 'DELAYS' && 
-                          extractIdNumber(entity.id) > lastProcessedId)
+        .filter(entity => {
+            // console.log('Processing entity:', entity.id);
+            
+            const hasAlert = 'alert' in entity;
+            // console.log('Has alert:', hasAlert);
+            
+            let alertType = 'unknown';
+            if (hasAlert && entity.alert["transit_realtime.mercury_alert"]) {
+                alertType = entity.alert["transit_realtime.mercury_alert"].alert_type;
+            }
+            // console.log('Alert type:', alertType);
+            
+            const idNumber = extractIdNumber(entity.id);
+            // console.log('ID number:', idNumber, 'Last processed ID:', lastProcessedId);
+            
+            const shouldInclude = hasAlert && alertType === 'Delays' && idNumber > lastProcessedId;
+            // console.log('Should include this alert:', shouldInclude);
+            // console.log('---');
+            
+            return shouldInclude;
+        })
         .map(processEntity);
 }
 
 // Extracts relevant information from a single entity
 function processEntity(entity) {
+   console.log('Processing entity:', entity.id);
     return {
-        id: entity.id,
-        idNumber: extractIdNumber(entity.id),
-        header: entity.alert.header_text.translation[0].text,
-        description: entity.alert.description_text.translation[0].text
+        id: entity.id || 'N/A',
+        idNumber: extractIdNumber(entity.id) || 'N/A',
+        header: entity.alert.header_text.translation[0].text || 'N/A',
+        description: entity.alert.description_text.translation[0].text || 'N/A',
+        createdAt: entity.alert["transit_realtime.mercury_alert"].created_at || 'N/A',
+        updatedAt: entity.alert["transit_realtime.mercury_alert"].updated_at || 'N/A'
     };
 }
 
@@ -69,7 +101,8 @@ async function main() {
         console.log ('Json URL:',JSON_URL)
         const newData = await fetchData(JSON_URL);
         const updates = processNewAlerts(newData, lastProcessedId);
-        
+
+        console.log('Number of new alerts:', updates.length);
         if (updates.length > 0) {
             updateBot(updates);
             await writeLastProcessedId(updates[updates.length - 1].idNumber);
