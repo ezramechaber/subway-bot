@@ -7,7 +7,9 @@ const ID_FILE = 'last_processed_id.txt';
 
 // Extracts the numeric part of the alert ID
 function extractIdNumber(id) {
-    return parseInt(id.split(':')[2]);
+    if (!id || typeof id !== 'string') return 0;
+    const parts = id.split(':');
+    return parts.length > 2 ? parseInt(parts[2], 10) || 0 : 0;
 }
 
 // Reads last processed ID number from file
@@ -72,15 +74,46 @@ function processNewAlerts(data, lastProcessedId) {
 
 // Extracts relevant information from a single entity
 function processEntity(entity) {
-   console.log('Processing entity:', entity.id);
-    return {
-        id: entity.id || 'N/A',
-        idNumber: extractIdNumber(entity.id) || 'N/A',
-        header: entity.alert.header_text.translation[0].text || 'N/A',
-        description: entity.alert.description_text.translation[0].text || 'N/A',
-        createdAt: entity.alert["transit_realtime.mercury_alert"].created_at || 'N/A',
-        updatedAt: entity.alert["transit_realtime.mercury_alert"].updated_at || 'N/A'
+    if (!entity || !entity.alert) {
+        console.log('Invalid entity structure:', JSON.stringify(entity));
+        return null;
+    }
+
+    const alert = entity.alert;
+    const mercuryAlert = alert["transit_realtime.mercury_alert"] || {};
+
+    // Helper function to safely access text from translation array
+    const safeTranslation = (textObj) => {
+        if (!textObj) return '';
+        if (!Array.isArray(textObj.translation) || textObj.translation.length === 0) return '';
+        return textObj.translation[0].text || '';
     };
+
+    // Log the presence or absence of header_text and description_text
+    console.log('Entity ID:', entity.id);
+    console.log('Has header_text:', 'header_text' in alert);
+    console.log('Has description_text:', 'description_text' in alert);
+
+    return {
+        id: entity.id || 'Unknown ID',
+        idNumber: extractIdNumber(entity.id),
+        header: alert.header_text ? safeTranslation(alert.header_text) : 'No header',
+        description: alert.description_text ? safeTranslation(alert.description_text) : 'No description',
+        createdAt: quickTimestampToDate(mercuryAlert.created_at || 0),
+        updatedAt: quickTimestampToDate(mercuryAlert.updated_at || 0),
+        alertType: mercuryAlert.alert_type || alert.alert_type || 'Unknown'
+    };
+}
+
+function quickTimestampToDate(timestamp) {
+    if (!timestamp) return 'Invalid Date';
+    const date = new Date(timestamp * 1000);
+    return `${date.getFullYear()}-${
+        String(date.getMonth() + 1).padStart(2, '0')}-${
+        String(date.getDate()).padStart(2, '0')} ${
+        String(date.getHours()).padStart(2, '0')}:${
+        String(date.getMinutes()).padStart(2, '0')}:${
+        String(date.getSeconds()).padStart(2, '0')}`;
 }
 
 // Updates the bot with new delay alert information
