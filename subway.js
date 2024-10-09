@@ -24,18 +24,21 @@ function processNewAlerts(data, lastProcessedId) {
     return data.entity
         .filter(entity => {
             
-            const hasAlert = 'alert' in entity;
+            let fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+            let mercuryAlert = entity.alert["transit_realtime.mercury_alert"];
+            let alertType = mercuryAlert.alert_type;
+            let updatedAt = mercuryAlert.updated_at * 1000;
+            let alertText = entity.alert.header_text.translation[0].text;
             
-            let alertType = 'unknown';
-            if (hasAlert && entity.alert["transit_realtime.mercury_alert"]) {
-                alertType = entity.alert["transit_realtime.mercury_alert"].alert_type;
-            }
+            if (alertType === 'Delays') {
+                console.log('Delay Alert Details:', {
+                    alertType,
+                    updatedAt: updatedAt,
+                    fiveMinutesAgo: fiveMinutesAgo,
+                    alertText: alertText
+                })};
 
-            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).getTime();
-            const updatedAt = (entity.alert["transit_realtime.mercury_alert"].updated_at)*1000;
-            const shouldInclude = hasAlert && alertType === 'Delays' && updatedAt > fiveMinutesAgo;
-            
-            return shouldInclude;
+            return updatedAt > fiveMinutesAgo;
         })
         .map(processEntity);
 }
