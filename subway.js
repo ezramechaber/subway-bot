@@ -3,25 +3,25 @@ const axios = require('axios');
 const env =      require('dotenv').config();
 
 const JSON_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json";
-const ID_FILE = 'last_processed_id.txt';
+//const ID_FILE = 'last_processed_id.txt';
 
 // Extracts the numeric part of the alert ID
-function extractIdNumber(id) {
-    if (!id || typeof id !== 'string') return 0;
-    const parts = id.split(':');
-    return parts.length > 2 ? parseInt(parts[2], 10) || 0 : 0;
-}
+// function extractIdNumber(id) {
+//     if (!id || typeof id !== 'string') return 0;
+//     const parts = id.split(':');
+//     return parts.length > 2 ? parseInt(parts[2], 10) || 0 : 0;
+// }
 
 // Reads last processed ID number from file
-async function readLastProcessedId() {
-    try {
-        const data = await fs.readFile(ID_FILE, 'utf8');
-        return parseInt(data.trim());
-    } catch (error) {
-        console.log('No existing processed ID found. Starting from the beginning.');
-        return 0;
-    }
-}
+// async function readLastProcessedId() {
+//     try {
+//         const data = await fs.readFile(ID_FILE, 'utf8');
+//         return parseInt(data.trim());
+//     } catch (error) {
+//         console.log('No existing processed ID found. Starting from the beginning.');
+//         return 0;
+//     }
+// }
 
 // Fetches JSON data from the specified URL
 async function fetchData(url) {
@@ -55,10 +55,10 @@ function processNewAlerts(data, lastProcessedId) {
             }
             // console.log('Alert type:', alertType);
             
-            const idNumber = extractIdNumber(entity.id);
+            //const idNumber = extractIdNumber(entity.id);
+            const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).getTime();
             // console.log('ID number:', idNumber, 'Last processed ID:', lastProcessedId);
-            
-            const shouldInclude = hasAlert && alertType === 'Delays' && idNumber > lastProcessedId;
+            const shouldInclude = hasAlert && alertType === 'Delays' && entity.alert["transit_realtime.mercury_alert"].updated_at > fiveMinutesAgo;
             // console.log('Should include this alert:', shouldInclude);
             // console.log('---');
             
@@ -91,7 +91,7 @@ function processEntity(entity) {
 
     return {
         id: entity.id || 'Unknown ID',
-        idNumber: extractIdNumber(entity.id),
+        //idNumber: extractIdNumber(entity.id),
         header: alert.header_text ? safeTranslation(alert.header_text) : 'No header',
         description: alert.description_text ? safeTranslation(alert.description_text) : 'No description',
         createdAt: quickTimestampToDate(mercuryAlert.created_at || 0),
@@ -124,11 +124,13 @@ function updateBot(updates) {
 // Main function that orchestrates the alert checking process
 async function getAlerts() {
     try {
-        const lastProcessedId = await readLastProcessedId();
-        console.log('Last processed ID:', lastProcessedId);
+        // const lastProcessedId = await readLastProcessedId();
+        // console.log('Last processed ID:', lastProcessedId);
         console.log('Json URL:', JSON_URL);
         const newData = await fetchData(JSON_URL);
-        return processNewAlerts(newData, lastProcessedId);
+        return processNewAlerts(newData
+            // , lastProcessedId
+        );
     } catch (error) {
         console.error('Error in getAlerts:', error.message);
         return [];
