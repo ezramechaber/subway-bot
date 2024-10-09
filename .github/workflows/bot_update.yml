@@ -1,5 +1,4 @@
 name: Update Bot
-
 on:
   schedule:
     - cron: '*/5 * * * *'  # Runs every 5 minutes
@@ -10,17 +9,38 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+
     - name: Use Node.js
       uses: actions/setup-node@v2
       with:
-        node-version: '18'
+        node-version: '18'  # or whichever version you're using now
+
+    - name: Cache last processed ID
+      id: cache-id
+      uses: actions/cache@v2
+      with:
+        path: ./last_processed_id.txt
+        key: ${{ runner.os }}-last-processed-id
+
+    - name: Create ID file if it doesn't exist
+      run: |
+        if [ ! -f ./last_processed_id.txt ]; then
+          echo "0" > ./last_processed_id.txt
+        fi
+
     - name: Install dependencies
       run: npm install
+
     - name: Run bot script
       env:
         THREADS_APP_ID: ${{ secrets.THREADS_APP_ID }}
         THREADS_APP_SECRET: ${{ secrets.THREADS_APP_SECRET }}
         USER_ID: ${{ secrets.USER_ID }}
         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        # Add any other necessary secrets here
       run: node index.js
+
+    - name: Update cache
+      uses: actions/cache@v2
+      with:
+        path: ./last_processed_id.txt
+        key: ${{ runner.os }}-last-processed-id
