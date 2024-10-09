@@ -1,6 +1,6 @@
-# Subway Bot
+# MTA Alerts => Threads
 
-Hi, this is a fun lil bot that scrapes NYC MTA subway information for delays, and then posts the update to Threads.
+Hi, this is a fun lil bot that scrapes NYC MTA subway information for delays, and then posts the update to Threads. You can follow it at [@nycsubwayalerts](https://threads.net/@nycsubwayalerts) (including in the Fediverse!), and follow me at [@ezra](https://threads.net/@ezra). 
 
 I made this in a couple days leveraging my shoddy knowledge of javascript and Cursor.sh / Claude Sonnet to work around what I don’t know. There was a lot of script monkey-ing here.
 
