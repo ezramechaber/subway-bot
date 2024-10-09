@@ -20,7 +20,7 @@ async function main() {
                 await postToThreads(content);
                 console.log(`Posted update for alert: ${update.id}`);
             }
-            
+            console.log("Updating:", updates[updates.length - 1].idNumber);
             await updateLastProcessedId(updates[updates.length - 1].idNumber);
         }
     } catch (error) {

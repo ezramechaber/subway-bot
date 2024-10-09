@@ -27,7 +27,7 @@ async function publishThreadsMediaContainer(containerIds) {
     });
     return response.data.id; // This is the published Threads Media ID
   } catch (error) {
-   // console.error('Error publishing media container:', error.response ? error.response.data : error.message);
+   console.error('Error publishing media container:', error);
     throw error;
   }
 }
@@ -49,7 +49,7 @@ async function postToThreads(content) {
     console.log('Successfully posted to Threads. Media ID:', publishedId);
     return publishedId;
   } catch (error) {
-    //console.error('Error posting to Threads:', error);
+    console.error('Error posting to Threads:', error);
     throw error;
   }
 }
