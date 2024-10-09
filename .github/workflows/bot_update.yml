@@ -2,7 +2,7 @@ name: Update Bot
 
 on:
   schedule:
-    - cron: '*/1 * * * *'  # Runs every 1 minutes
+    - cron: '*/5 * * * *'  # Runs every 5 minutes
   workflow_dispatch:  # Allows manual triggering
 
 jobs:
@@ -18,6 +18,9 @@ jobs:
       run: npm ci
     - name: Run bot script
       env:
-        JSON_URL: ${{ secrets.JSON_URL }}
+        THREADS_APP_ID: ${{ secrets.THREADS_APP_ID }}
+        THREADS_APP_SECRET: ${{ secrets.THREADS_APP_SECRET }}
+        USER_ID: ${{ secrets.USER_ID }}
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         # Add any other necessary secrets here
-      run: node bot_script.js
+      run: node index.js
