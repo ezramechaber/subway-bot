@@ -14,7 +14,7 @@ async function createThreadsMediaContainer(content) {
     });
     return response.data.id; // This is the media container ID
   } catch (error) {
-    console.error('Error creating media container:', error.response ? error.response.data : error.message);
+    console.error('Error creating media container:', error.message);
     throw error;
   }
 }
@@ -27,7 +27,7 @@ async function publishThreadsMediaContainer(containerIds) {
     });
     return response.data.id; // This is the published Threads Media ID
   } catch (error) {
-    console.error('Error publishing media container:', error.response ? error.response.data : error.message);
+   // console.error('Error publishing media container:', error.response ? error.response.data : error.message);
     throw error;
   }
 }
@@ -35,23 +35,23 @@ async function publishThreadsMediaContainer(containerIds) {
 async function postToThreads(content) {
   try {
     // Create media container
+    console.log(content);
     console.log("Waiting to start container...");
     const containerId = await createThreadsMediaContainer(content);
     
-    // Wait for 3 seconds (you might want to adjust this)
+    // Wait for 30 seconds (you might want to adjust this)
     await new Promise(resolve => setTimeout(resolve, 3000));
     console.log("Waiting for container...");
     
     // Publish the media container
     const publishedId = await publishThreadsMediaContainer(containerId);
-    
+    console.log("waiting to publish...");
     console.log('Successfully posted to Threads. Media ID:', publishedId);
     return publishedId;
   } catch (error) {
-    console.error('Error posting to Threads:', error);
+    //console.error('Error posting to Threads:', error);
     throw error;
   }
 }
 
-// Usage example
-postToThreads('Your post text here');
+module.exports = { postToThreads };
