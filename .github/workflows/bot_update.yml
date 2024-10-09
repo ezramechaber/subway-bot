@@ -3,21 +3,17 @@ on:
   schedule:
     - cron: '*/5 * * * *'  # Runs every 5 minutes
   workflow_dispatch:  # Allows manual triggering
-
 jobs:
   update-bot:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-
     - name: Use Node.js
       uses: actions/setup-node@v2
       with:
         node-version: '18'
-
     - name: Install dependencies
       run: npm install
-
     - name: Run bot script
       env:
         THREADS_APP_ID: ${{ secrets.THREADS_APP_ID }}
