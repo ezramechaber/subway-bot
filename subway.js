@@ -3,25 +3,6 @@ const axios = require('axios');
 const env =      require('dotenv').config();
 
 const JSON_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json";
-//const ID_FILE = 'last_processed_id.txt';
-
-// Extracts the numeric part of the alert ID
-// function extractIdNumber(id) {
-//     if (!id || typeof id !== 'string') return 0;
-//     const parts = id.split(':');
-//     return parts.length > 2 ? parseInt(parts[2], 10) || 0 : 0;
-// }
-
-// Reads last processed ID number from file
-// async function readLastProcessedId() {
-//     try {
-//         const data = await fs.readFile(ID_FILE, 'utf8');
-//         return parseInt(data.trim());
-//     } catch (error) {
-//         console.log('No existing processed ID found. Starting from the beginning.');
-//         return 0;
-//     }
-// }
 
 // Fetches JSON data from the specified URL
 async function fetchData(url) {
@@ -40,27 +21,19 @@ function processNewAlerts(data, lastProcessedId) {
         return [];
     }
 
-    // console.log('Number of entities:', data.entity.length);
-
     return data.entity
         .filter(entity => {
-            // console.log('Processing entity:', entity.id);
             
             const hasAlert = 'alert' in entity;
-            // console.log('Has alert:', hasAlert);
             
             let alertType = 'unknown';
             if (hasAlert && entity.alert["transit_realtime.mercury_alert"]) {
                 alertType = entity.alert["transit_realtime.mercury_alert"].alert_type;
             }
-            // console.log('Alert type:', alertType);
-            
-            //const idNumber = extractIdNumber(entity.id);
+
             const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).getTime();
-            // console.log('ID number:', idNumber, 'Last processed ID:', lastProcessedId);
-            const shouldInclude = hasAlert && alertType === 'Delays' && entity.alert["transit_realtime.mercury_alert"].updated_at > fiveMinutesAgo;
-            // console.log('Should include this alert:', shouldInclude);
-            // console.log('---');
+            const updatedAt = (entity.alert["transit_realtime.mercury_alert"].updated_at)*1000;
+            const shouldInclude = hasAlert && alertType === 'Delays' && updatedAt > fiveMinutesAgo;
             
             return shouldInclude;
         })
@@ -124,8 +97,6 @@ function updateBot(updates) {
 // Main function that orchestrates the alert checking process
 async function getAlerts() {
     try {
-        // const lastProcessedId = await readLastProcessedId();
-        // console.log('Last processed ID:', lastProcessedId);
         console.log('Json URL:', JSON_URL);
         const newData = await fetchData(JSON_URL);
         return processNewAlerts(newData
