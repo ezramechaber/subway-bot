@@ -2,7 +2,7 @@ const fs = require('fs').promises;
 const axios = require('axios');
 const env =      require('dotenv').config();
 
-const JSON_URL = process.env.JSON_URL;
+const JSON_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json";
 const ID_FILE = 'last_processed_id.txt';
 
 // Extracts the numeric part of the alert ID
