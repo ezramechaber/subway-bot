@@ -11,7 +11,7 @@ The bot has a few different components:
 - `subway.js` grabs realtime data from MTA's json and filters to just delays from the last 5 minutes
 - `threads.js` handles creating and posting to threads.
 
-And then the bot itself is run via Github action with a cron job that's triggered every 5 minutes. Environment variables (including Threads API keys) are handled there.
+And then the bot itself is run via cron job on Render.com that's triggered every 5 minutes. Environment variables (including Threads API keys) are handled there. I tried to do it via GitHub Actions but it turns out cron job scheduling is quite unreliable. Ultimately each run takes about 20 seconds, so hosting this should cost under $3 a month or so.
 
 ## What's the data source?
 
