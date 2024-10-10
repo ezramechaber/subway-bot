@@ -32,16 +32,47 @@ function processNewAlerts(data, lastProcessedId) {
             
             if (alertType === 'Delays') {
                 console.log('Delay Alert Details:', {
+                    id: entity.id,
                     alertType,
                     updatedAt: updatedAt,
                     fiveMinutesAgo: fiveMinutesAgo,
-                    alertText: alertText
-                })};
+                    alertText: alertText,
+                    isRecent: updatedAt > fiveMinutesAgo
+                })
 
-            return updatedAt > fiveMinutesAgo;
+                return updatedAt > fiveMinutesAgo;
+            };
+        return false;
         })
         .map(processEntity);
 }
+
+// Modify alert text when called
+function categorizeSubwayAlert(alertText) {
+    const categories = [
+      { emoji: '👮', keywords: ['NYPD', 'police', 'investigation'] },
+      { emoji: '🚦', keywords: ['signal', 'switch'] },
+      { emoji: '🚪', keywords: ['door'] },
+      { emoji: '⚙️', keywords: ['mechanical', 'brakes'] },
+      { emoji: '🏥', keywords: ['medical', 'EMS'] },
+      { emoji: '🚢', keywords: ['bridge'] },
+      { emoji: '🛤️', keywords: ['rails', 'replaced rails'] },
+      { emoji: '🚶', keywords: ['person', 'disruptive'] },
+      { emoji: '🗑️', keywords: ['debris'] },
+      { emoji: '🔀', keywords: ['express', 'local'] }
+    ];
+  
+    const lowerCaseAlert = alertText.toLowerCase();
+    
+    for (const category of categories) {
+      if (category.keywords.some(keyword => lowerCaseAlert.includes(keyword))) {
+        return `${category.emoji} ${alertText}`;
+      }
+    }
+  
+    // Default category for unspecified delays
+    return `⚠️ ${alertText}`;
+  }
 
 // Extracts relevant information from a single entity
 function processEntity(entity) {
@@ -67,8 +98,7 @@ function processEntity(entity) {
 
     return {
         id: entity.id || 'Unknown ID',
-        //idNumber: extractIdNumber(entity.id),
-        header: alert.header_text ? safeTranslation(alert.header_text) : 'No header',
+        header: categorizeSubwayAlert(alert.header_text ? safeTranslation(alert.header_text) : 'No header'),
         description: alert.description_text ? safeTranslation(alert.description_text) : 'No description',
         createdAt: quickTimestampToDate(mercuryAlert.created_at || 0),
         updatedAt: quickTimestampToDate(mercuryAlert.updated_at || 0),
@@ -102,9 +132,7 @@ async function getAlerts() {
     try {
         console.log('Json URL:', JSON_URL);
         const newData = await fetchData(JSON_URL);
-        return processNewAlerts(newData
-            // , lastProcessedId
-        );
+        return processNewAlerts(newData);
     } catch (error) {
         console.error('Error in getAlerts:', error.message);
         return [];

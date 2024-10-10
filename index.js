@@ -10,7 +10,6 @@ async function main() {
         if (updates.length > 0) {
             for (const update of updates) {
                 const content = `${update.header}`;
-                await postToThreads(content);
                 console.log(`Posted update for alert: ${update.id}`);
             }
             console.log("Updating:", updates[updates.length - 1].idNumber);
