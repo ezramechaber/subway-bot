@@ -23,26 +23,28 @@ function processNewAlerts(data, lastProcessedId) {
 
     return data.entity
         .filter(entity => {
-            
-            let fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
             let mercuryAlert = entity.alert["transit_realtime.mercury_alert"];
             let alertType = mercuryAlert.alert_type;
             let updatedAt = mercuryAlert.updated_at * 1000;
             let alertText = entity.alert.header_text.translation[0].text;
             
             if (alertType === 'Delays') {
+                // Back to 5 minutes window
+                let fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+                let isRecent = updatedAt > fiveMinutesAgo;
+                
                 console.log('Delay Alert Details:', {
                     id: entity.id,
                     alertType,
                     updatedAt: updatedAt,
                     fiveMinutesAgo: fiveMinutesAgo,
                     alertText: alertText,
-                    isRecent: updatedAt > fiveMinutesAgo
+                    isRecent: isRecent
                 })
 
-                return updatedAt > fiveMinutesAgo;
+                return isRecent;
             };
-        return false;
+            return false;
         })
         .map(processEntity);
 }

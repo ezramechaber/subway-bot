@@ -8,6 +8,10 @@ require('dotenv').config();
 const ENABLE_THREADS = process.env.ENABLE_THREADS === 'true';
 const ENABLE_BLUESKY = process.env.ENABLE_BLUESKY === 'true';
 
+console.log('Posting configuration:');
+console.log('- Threads enabled:', ENABLE_THREADS);
+console.log('- Bluesky enabled:', ENABLE_BLUESKY);
+
 async function main() {
     try {
         const updates = await getAlerts();
@@ -15,29 +19,36 @@ async function main() {
         
         if (updates.length > 0) {
             for (const update of updates) {
-                const content = `${update.header}`;
+                console.log('\nProcessing alert:', update.id);
+                console.log('Alert text:', update.header);
                 
                 // Post to Threads if enabled
                 if (ENABLE_THREADS) {
                     try {
-                        await postToThreads(content);
-                        console.log(`Posted to Threads: ${update.id}`);
+                        console.log('Attempting to post to Threads...');
+                        await postToThreads(update.header);
+                        console.log('✅ Successfully posted to Threads');
                     } catch (error) {
-                        console.error('Error posting to Threads:', error.message);
+                        console.error('❌ Error posting to Threads:', error.message);
                     }
                 }
                 
                 // Post to Bluesky if enabled
                 if (ENABLE_BLUESKY) {
                     try {
-                        await postToBluesky(content);
-                        console.log(`Posted to Bluesky: ${update.id}`);
+                        console.log('Attempting to post to Bluesky...');
+                        await postToBluesky(update.header);
+                        console.log('✅ Successfully posted to Bluesky');
                     } catch (error) {
-                        console.error('Error posting to Bluesky:', error.message);
+                        console.error('❌ Error posting to Bluesky:', error.message);
                     }
                 }
             }
-            console.log("Updating:", updates[updates.length - 1].idNumber);
+            if (updates[updates.length - 1]?.idNumber) {
+                console.log("Updating:", updates[updates.length - 1].idNumber);
+            }
+        } else {
+            console.log('No new alerts to post');
         }
     } catch (error) {
         console.error('Error in main process:', error.message);
