@@ -44,9 +44,8 @@ async function main() {
                     }
                 }
             }
-            if (updates[updates.length - 1]?.idNumber) {
-                console.log("Updating:", updates[updates.length - 1].idNumber);
-            }
+            // Log the last processed alert ID
+            console.log("Last processed alert ID:", updates[updates.length - 1].id);
         } else {
             console.log('No new alerts to post');
         }

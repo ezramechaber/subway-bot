@@ -4,6 +4,9 @@ const env =      require('dotenv').config();
 
 const JSON_URL = "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/camsys%2Fsubway-alerts.json";
 
+// Configuration
+const ALERT_TIME_WINDOW_MINUTES = 5; // Adjust this value to change how far back we look for alerts
+
 // Fetches JSON data from the specified URL
 async function fetchData(url) {
     const response = await axios.get(url);
@@ -21,7 +24,7 @@ function processNewAlerts(data, lastProcessedId) {
         return [];
     }
 
-    return data.entity
+    const filteredAlerts = data.entity
         .filter(entity => {
             let mercuryAlert = entity.alert["transit_realtime.mercury_alert"];
             let alertType = mercuryAlert.alert_type;
@@ -29,15 +32,14 @@ function processNewAlerts(data, lastProcessedId) {
             let alertText = entity.alert.header_text.translation[0].text;
             
             if (alertType === 'Delays') {
-                // Back to 5 minutes window
-                let fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-                let isRecent = updatedAt > fiveMinutesAgo;
+                let timeWindowAgo = Date.now() - ALERT_TIME_WINDOW_MINUTES * 60 * 1000;
+                let isRecent = updatedAt > timeWindowAgo;
                 
                 console.log('Delay Alert Details:', {
                     id: entity.id,
                     alertType,
                     updatedAt: updatedAt,
-                    fiveMinutesAgo: fiveMinutesAgo,
+                    timeWindowAgo: timeWindowAgo,
                     alertText: alertText,
                     isRecent: isRecent
                 })
@@ -45,8 +47,15 @@ function processNewAlerts(data, lastProcessedId) {
                 return isRecent;
             };
             return false;
-        })
-        .map(processEntity);
+        });
+
+    console.log('Number of recent delay alerts:', filteredAlerts.length);
+    console.log(`(Looking back ${ALERT_TIME_WINDOW_MINUTES} minutes)`);
+    
+    const processedAlerts = filteredAlerts.map(processEntity).filter(alert => alert !== null);
+    console.log('Number of processed alerts:', processedAlerts.length);
+    
+    return processedAlerts;
 }
 
 // Modify alert text when called
