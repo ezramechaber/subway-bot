@@ -4,11 +4,13 @@
   "description": "MTA => Threads Alerts",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "test-bluesky": "node test-bluesky.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@atproto/api": "^0.6.0",
     "axios": "^1.7.7",
     "dotenv": "^16.4.5",
     "threads-graph-api": "^0.1.0"
